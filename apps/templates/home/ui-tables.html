@@ -1,0 +1,506 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} UI Tables {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Landing Page</title>
+    <style>
+        /* Add some basic CSS for styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            display: flex;
+            align-items: left;
+            justify-content: left;
+            height: 100vh;
+            flex-direction: column;
+        }
+        .title {
+            font-size: 36px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .line {
+            width: 100%;
+            height: 1px;
+            background-color: #333;
+        }
+        .no-campaign {
+            background-color: #33c5ff;
+            color: white;
+            padding: 5px;
+            text-align: left;
+        }
+        .btn {
+            background-color: #007BFF;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            margin-bottom: 10px;
+            position: absolute;
+            top: 37%;
+            width: 10vw;
+            text-align: center;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        /* Popup styles */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+        }
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            padding: 30px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
+            width: 400px;
+            height: 400px;
+        }
+        .popup-title {
+            font-size: 24px;
+        }
+        .popup-line {
+            width: 100%;
+            height: 1px;
+            background-color: #333;
+            margin-bottom: 10px;
+        }
+        .name-input-container {
+            text-align: left;
+        }
+        .name-label {
+            display: block;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .name-input {
+            width: 100%;
+            padding: 5px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+
+    <div class="container ">
+        <h1 class="title">User and Groups</h1>
+        <div class="line"></div>
+        <button class="btn mt-5" id="openPopup">+ New Group</button>
+        <p>&nbsp; </p>
+        <p class="no-campaign">No new groups created yet, Let's try to create</p>
+        <!-- <a href="{% url 'send_email' %}" class="btn btn-success">Send Email</a> -->
+    </div>
+
+    <!-- Main Popup content -->
+    <div class="overlay" id="popupOverlay">
+        <div class="popup" id="popupContent">
+            <h2 class="popup-title">New Group</h2>
+            <div class="popup-line"></div>
+            <div class="name-input-container">
+                <label class="name-label" for="nameInput">Name:</label>
+                <input class="name-input" type="text" id="nameInput" placeholder="Enter your name">
+            </div>
+            <div class="name-input-container">
+                <label class="name-label" for="fileBrowse">Select a file (.xlsx, .csv):</label>
+                <input class="name-input" type="file" id="fileBrowse" accept=".xlsx, .csv">
+            </div>
+            <button id="openSecondPopup">Import Users</button>
+            <a href="#" id="openTemplate" download>File Template</a>
+            <p>&nbsp; </p>
+            <button id="closePopup">Close</button>
+        </div>
+    </div>
+
+    <!-- Second Popup content (nested within the first popup) -->
+    <div class="overlay" id="secondPopupOverlay">
+        <div class="popup" id="secondPopupContent">
+            <h2 class="popup-title">Import Users</h2>
+            <div class="popup-line"></div>
+            <div class="name-input-container">
+                <label class="name-label" for="fileInput">Selected file:</label>
+                <input class="name-input" type="text" id="fileInput" readonly>
+            </div>
+            <p>&nbsp; </p>
+            <button id="importUsers">Import</button>
+            <button id="closeSecondPopup">Close</button>
+        </div>
+    </div>
+
+    <script>
+        const openButton = document.getElementById("openPopup");
+        const closeButton = document.getElementById("closePopup");
+        const overlay = document.getElementById("popupOverlay");
+        const popup = document.getElementById("popupContent");
+        const nameInput = document.getElementById("nameInput");
+        const fileBrowse = document.getElementById("fileBrowse");
+        const fileInput = document.getElementById("fileInput");
+        const openSecondPopupButton = document.getElementById("openSecondPopup");
+        const closeSecondPopupButton = document.getElementById("closeSecondPopup");
+        const secondPopupOverlay = document.getElementById("secondPopupOverlay");
+        const secondPopupContent = document.getElementById("secondPopupContent");
+        const importUsersButton = document.getElementById("importUsers");
+        const openTemplateButton = document.getElementById("openTemplate");
+
+        openButton.addEventListener("click", function(event) {
+            event.preventDefault();
+            overlay.style.display = "block";
+            popup.style.display = "block";
+        });
+
+        closeButton.addEventListener("click", function() {
+            overlay.style.display = "none";
+            popup.style.display = "none";
+        });
+
+        openSecondPopupButton.addEventListener("click", function() {
+            secondPopupOverlay.style.display = "block";
+            secondPopupContent.style.display = "block";
+        });
+
+        closeSecondPopupButton.addEventListener("click", function() {
+            secondPopupOverlay.style.display = "none";
+            secondPopupContent.style.display = "none";
+        });
+
+        importUsersButton.addEventListener("click", function() {
+            const selectedFile = fileBrowse.files[0];
+            if (selectedFile) {
+                fileInput.value = selectedFile.name;
+                openTemplateButton.href = URL.createObjectURL(selectedFile);
+
+                // Send the file to the server using fetch
+                const formData = new FormData();
+                formData.append("file", selectedFile);
+
+                fetch("upload.php", {
+                    method: "POST",
+                    body: formData,
+                })
+                .then(response => response.text())
+                .then(data => {
+                    console.log(data);
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                });
+            } else {
+                alert("Please select a file");
+            }
+        });
+
+        fileBrowse.addEventListener("change", function() {
+            const selectedFile = fileBrowse.files[0];
+            if (selectedFile) {
+                fileInput.value = selectedFile.name;
+            }
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+        <!-- <div class="row">
+            <div class="col-md-12">
+              <div class="card">
+                <div class="card-header card-header-primary">
+                  <h4 class="card-title ">Users and Groups</h4>
+                  <p class="card-category"> Here is the data of User and Groups</p>
+                </div>
+                <div class="card-body">
+                  <div class="table-responsive">
+                    <table class="table">
+                      <thead class=" text-primary">
+                        <th>
+                          ID
+                        </th>
+                        <th>
+                          Name
+                        </th>
+                        <th>
+                          Country
+                        </th>
+                        <th>
+                          City
+                        </th>
+                        <th>
+                          Salary
+                        </th>
+                      </thead>
+                      <tbody>
+                        <tr> -->
+                          <!-- <td>
+                            1
+                          </td> -->
+                          <!-- <td>
+                            Dakota Rice
+                          </td>
+                          <td>
+                            Niger
+                          </td>
+                          <td>
+                            Oud-Turnhout
+                          </td>
+                          <td class="text-primary">
+                            $36,738
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            2
+                          </td>
+                          <td>
+                            Minerva Hooper
+                          </td>
+                          <td>
+                            Curaçao
+                          </td>
+                          <td>
+                            Sinaai-Waas
+                          </td>
+                          <td class="text-primary">
+                            $23,789
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            3
+                          </td>
+                          <td>
+                            Sage Rodriguez
+                          </td>
+                          <td>
+                            Netherlands
+                          </td>
+                          <td>
+                            Baileux
+                          </td>
+                          <td class="text-primary">
+                            $56,142
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            4
+                          </td>
+                          <td>
+                            Philip Chaney
+                          </td>
+                          <td>
+                            Korea, South
+                          </td>
+                          <td>
+                            Overland Park
+                          </td>
+                          <td class="text-primary">
+                            $38,735
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            5
+                          </td>
+                          <td>
+                            Doris Greene
+                          </td>
+                          <td>
+                            Malawi
+                          </td>
+                          <td>
+                            Feldkirchen in Kärnten
+                          </td>
+                          <td class="text-primary">
+                            $63,542
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            6
+                          </td>
+                          <td>
+                            Mason Porter
+                          </td>
+                          <td>
+                            Chile
+                          </td>
+                          <td>
+                            Gloucester
+                          </td>
+                          <td class="text-primary">
+                            $78,615
+                          </td> -->
+                        <!-- </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div> -->
+            <!-- <div class="col-md-12">
+              <div class="card card-plain">
+                <div class="card-header card-header-primary">
+                  <h4 class="card-title mt-0"> Table on Plain Background</h4>
+                  <p class="card-category"> Here is a subtitle for this table</p>
+                </div>
+                <div class="card-body">
+                  <div class="table-responsive">
+                    <table class="table table-hover">
+                      <thead class="">
+                        <th>
+                          ID
+                        </th>
+                        <th>
+                          Name
+                        </th>
+                        <th>
+                          Country
+                        </th>
+                        <th>
+                          City
+                        </th>
+                        <th>
+                          Salary
+                        </th>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>
+                            1
+                          </td>
+                          <td>
+                            Dakota Rice
+                          </td>
+                          <td>
+                            Niger
+                          </td>
+                          <td>
+                            Oud-Turnhout
+                          </td>
+                          <td>
+                            $36,738
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            2
+                          </td>
+                          <td>
+                            Minerva Hooper
+                          </td>
+                          <td>
+                            Curaçao
+                          </td>
+                          <td>
+                            Sinaai-Waas
+                          </td>
+                          <td>
+                            $23,789
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            3
+                          </td>
+                          <td>
+                            Sage Rodriguez
+                          </td>
+                          <td>
+                            Netherlands
+                          </td>
+                          <td>
+                            Baileux
+                          </td>
+                          <td>
+                            $56,142
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            4
+                          </td>
+                          <td>
+                            Philip Chaney
+                          </td>
+                          <td>
+                            Korea, South
+                          </td>
+                          <td>
+                            Overland Park
+                          </td>
+                          <td>
+                            $38,735
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            5
+                          </td>
+                          <td>
+                            Doris Greene
+                          </td>
+                          <td>
+                            Malawi
+                          </td>
+                          <td>
+                            Feldkirchen in Kärnten
+                          </td>
+                          <td>
+                            $63,542
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            6
+                          </td>
+                          <td>
+                            Mason Porter
+                          </td>
+                          <td>
+                            Chile
+                          </td>
+                          <td>
+                            Gloucester
+                          </td>
+                          <td>
+                            $78,615
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div> -->
+              <!-- </div>
+            </div>
+        </div> -->
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}

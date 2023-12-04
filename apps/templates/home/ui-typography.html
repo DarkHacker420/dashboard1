@@ -1,0 +1,297 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} UI Typography {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Landing Page</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
+
+    <style>
+        /* Add some basic CSS for styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            display: flex;
+            align-items: left;
+            justify-content: left;
+            height: 100vh;
+            flex-direction: column;
+        }
+        .title {
+            font-size: 36px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .line {
+            width: 100%;
+            height: 1px;
+            background-color: #333;
+        }
+        .no-campaign {
+            background-color: #33c5ff;
+            color: white;
+            padding: 5px;
+            text-align: left;
+        }
+        .btn {
+            background-color: #007BFF;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            margin-bottom: 10px;
+            position: absolute;
+            top: 37%;
+            width: 10vw;
+            text-align: center;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        /* Popup styles */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+        }
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            padding: 30px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
+            width: 400px;
+            height: 400px;
+        }
+        .popup-title {
+            font-size: 24px;
+        }
+        .popup-line {
+            width: 100%;
+            height: 1px;
+            background-color: #333;
+            margin-bottom: 10px;
+        }
+        .name-input-container {
+            text-align: left;
+        }
+        .name-label {
+            display: block;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .name-input {
+            width: 100%;
+            padding: 5px;
+            margin-top: 5px;
+        }
+        #closePopupButton {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Email Templates</h1>
+        <div class="line"></div>
+        <button class="btn" id="openPopup">+New Template</button>
+        <p>&nbsp; </p>
+    </div>
+
+    <!-- Main Popup content -->
+    <div class="overlay" id="popupOverlay">
+        <div class="popup" id="popupContent">
+            <h2 class "popup-title">New Template</h2>
+            <div class="popup-line"></div>
+            <div class="name-input-container">
+                <label class="name-label" for="nameInput">Name:</label>
+                <input class="name-input" type="text" id="nameInput" placeholder="Templates name">
+            </div>
+            <button id="openSecondPopup">
+              <i class="fas fa-envelope"></i> Import Email
+            </button>
+            <button id="closePopup">Close</button>
+        </div>
+    </div>
+
+    <!-- Second Popup content (nested within the first popup) -->
+    <div class="overlay" id="secondPopupOverlay">
+        <div class="popup" id="secondPopupContent">
+            <h2 class "popup-title">Import Site</h2>
+            <div class="popup-line"></div>
+            <div class="name-input-container">
+                <label class="name-label" for="linkInput">Email Content:</label>
+                <textarea class="name-input" id="linkInput" placeholder="Enter Email Content" style="width: 340px; min-height: 150px;" oninput="autoResize(this)"></textarea>
+            </div>
+            <p>&nbsp; </p>
+            <button id="importLink">Import</button>
+            <button id="editContent">Edit Content</button>
+            <span id="closeSecondPopupButton" onclick="closeSecondPopup()">&times;</span>
+        </div>
+    </div>
+
+    <script>
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = (textarea.scrollHeight) + 'px';
+        }
+        const openButton = document.getElementById("openPopup");
+        const closeButton = document.getElementById("closePopup");
+        const overlay = document.getElementById("popupOverlay");
+        const popup = document.getElementById("popupContent");
+        const nameInput = document.getElementById("nameInput");
+
+        openButton.addEventListener("click", function() {
+            overlay.style.display = "block";
+            popup.style.display = "block";
+        });
+
+        closeButton.addEventListener("click", function() {
+            overlay.style.display = "none";
+            popup.style.display = "none";
+        });
+
+        const openSecondPopupButton = document.getElementById("openSecondPopup");
+        const closeSecondPopupButton = document.getElementById("closePopup");
+        const secondPopupOverlay = document.getElementById("secondPopupOverlay");
+        const secondPopupContent = document.getElementById("secondPopupContent");
+        const linkInput = document.getElementById("linkInput");
+        const importLinkButton = document.getElementById("importLink");
+
+        openSecondPopupButton.addEventListener("click", function() {
+            secondPopupOverlay.style.display = "block";
+            secondPopupContent.style.display = "block";
+        });
+
+        closeSecondPopupButton.addEventListener("click", function() {
+            secondPopupOverlay.style.display = "none";
+            secondPopupContent.style.display = "none";
+        });
+
+        importLinkButton.addEventListener("click", function() {
+            const enteredLink = linkInput.value;
+            if (enteredLink) {
+                // Perform the import action here (e.g., redirect to the entered link)
+                window.location.href = enteredLink;
+            }
+        });
+
+        function closeSecondPopup() {
+            var secondPopupOverlay = document.getElementById("secondPopupOverlay");
+            var secondPopupContent = document.getElementById("secondPopupContent");
+
+            if (secondPopupOverlay && secondPopupContent) {
+                secondPopupOverlay.style.display = "none";
+                secondPopupContent.style.display = "none";
+            }
+        }
+
+        const editContentButton = document.getElementById("editContent");
+        editContentButton.addEventListener("click", function() {
+            // Add your code to handle editing the email content here
+        });
+
+    </script>
+</body>
+</html>
+
+
+    
+<!-- <!DOCTYPE html>
+<html>
+<head>
+    <title>Landing Page</title>
+    <style>
+        /* Add some basic CSS for styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            display: flex;
+            align-items: left;
+            justify-content: left;
+            height: 100vh;
+            flex-direction: column;
+        }
+        .title {
+            font-size: 36px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .line {
+            width: 100%;
+            height: 1px;
+            background-color: #333;
+        }
+        .no-campaign {
+            background-color: #33c5ff;
+            color: white;
+            padding: 5px;
+            text-align: left;
+        }
+        .btn {
+            background-color: #007BFF;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            margin-bottom: 10px;
+            position: absolute;
+            top: 37%;
+            width: 10vw;
+            text-align: center;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .name-input-container {
+            text-align: left;
+        }
+        .name-label {
+            display: block;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .name-input {
+            width: 100%;
+            padding: 5px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+        <div class="container">
+          <h1>Email Templates</h1>
+          <div class="line"></div>
+          <p>&nbsp; </p>
+          <button id="newProfileButton" onclick="openProfilePopup()">New Template</button>
+        </div> -->
+
+        
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}

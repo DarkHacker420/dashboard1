@@ -1,0 +1,249 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} UI Icons {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        .line {
+            width: 100%;
+            height: 1px;
+            background-color: #333;
+        }
+        .no-profile {
+            background-color: #8db8e3;
+            color: white;
+            padding: 10px;
+        }
+        h1 {
+            text-align: center;
+        }
+
+        button {
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #configModal, #emailModal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            max-width: 400px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 8px;
+        }
+
+        input,
+        textarea {
+            padding: 8px;
+            margin-bottom: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        button[type="submit"],
+        button[type="button"] {
+            background-color: #717375;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        button[type="submit"]:hover,
+        button[type="button"]:hover {
+            background-color: #0056b3;
+        }
+
+        button[type="button"] {
+            margin-top: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Sending Profile</h1>
+    <div class="line"></div>
+    <p>&nbsp;</p>
+    <p class="no-profile" id="noProfileMessage">No sending profile created yet. Let's try to create one.</p>
+
+    <!-- Button to open Email Configuration Modal -->
+    <button onclick="openConfigModal()">New Template</button>
+
+    <!-- Email Configuration Modal -->
+    <div id="configModal">
+        <form method="post" action="">
+            {% csrf_token %}
+            <label for="name">Name:</label>
+            <input id="name" type="text" name="name" required>
+
+            <label for="port">Port:</label>
+            <input id="port" type="text" name="port" required>
+
+            <label for="smtp">SMTP:</label>
+            <input id="smtp" type="text" name="smtp" required>
+
+            <label for="username">User Name:</label>
+            <input id="username" type="text" name="username" required>
+
+            <label for="password">Password:</label>
+            <input id="password" type="password" name="password" required>
+
+        <button type="button" onclick="saveConfig()">Save Configuration</button>
+
+            <!-- Button to open Email Modal -->
+            <button id="emailButton" type="button" onclick="openEmailModal()">Send Email</button>
+        </form>
+        <button type="button" onclick="closeConfigModal()">Close</button>
+    </div>
+
+    <!-- Email Modal -->
+    <div id="emailModal">
+        <form method="post" action="{% url 'send_email' %}">
+            {% csrf_token %}
+            <label for="to">To:</label>
+            <input id="to" type="email" name="to" required>
+
+            <label for="subject">Subject:</label>
+            <input id="subject" type="text" name="subject" required>
+
+            <label for="message">Message:</label>
+            <textarea id="message" name="message" rows="4" required></textarea>
+
+            <button id="submitButton" type="submit">Send Email</button>
+            <button id="editButton" type="button" onclick="editForm()">Edit</button>
+        </form>
+        <button type="button" onclick="closeEmailModal()">Close</button>
+    </div>
+
+    <!-- Table to display entered configurations -->
+    <table id="configTable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Port</th>
+                <th>SMTP</th>
+                <th>User Name</th>
+                <th>Password</th>
+            </tr>
+        </thead>
+        <tbody id="configBody">
+            <!-- Config rows will be added here -->
+        </tbody>
+    </table>
+
+    <script>
+        function openConfigModal() {
+            document.getElementById('configModal').style.display = 'block';
+        }
+
+        function closeConfigModal() {
+            document.getElementById('configModal').style.display = 'none';
+        }
+
+        function openEmailModal() {
+            document.getElementById('emailModal').style.display = 'block';
+        }
+
+        function closeEmailModal() {
+            document.getElementById('emailModal').style.display = 'none';
+        }
+
+        function editForm() {
+            // Enable the form fields for editing
+            document.getElementById('to').disabled = false;
+            document.getElementById('subject').disabled = false;
+            document.getElementById('message').disabled = false;
+
+            // Enable the "Submit" button after clicking "Edit"
+            document.getElementById('submitButton').disabled = false;
+
+            // Disable the "Edit" button after clicking
+            document.getElementById('editButton').disabled = true;
+        }
+
+        function saveConfig() {
+            var name = document.getElementById('name').value;
+            var port = document.getElementById('port').value;
+            var smtp = document.getElementById('smtp').value;
+            var username = document.getElementById('username').value;
+            var password = document.getElementById('password').value;
+
+            // Create a new row in the table
+            var tableBody = document.getElementById('configBody');
+            var newRow = tableBody.insertRow(tableBody.rows.length);
+
+            // Insert cells with configuration data
+            var cell1 = newRow.insertCell(0);
+            var cell2 = newRow.insertCell(1);
+            var cell3 = newRow.insertCell(2);
+            var cell4 = newRow.insertCell(3);
+            var cell5 = newRow.insertCell(4);
+
+            cell1.innerHTML = name;
+            cell2.innerHTML = port;
+            cell3.innerHTML = smtp;
+            cell4.innerHTML = username;
+            cell5.innerHTML = password;
+
+            // Close the Configuration Modal
+            closeConfigModal();
+
+            // Clear the form fields
+            document.getElementById('name').value = '';
+            document.getElementById('port').value = '';
+            document.getElementById('smtp').value = '';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+    </script>
+</body>
+</html>
+{% endblock content %}
